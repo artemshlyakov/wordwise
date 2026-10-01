@@ -93,7 +93,6 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid 
 .autumn-leaf-one { top: 26px; right: 49%; font-size: 17px; transform: rotate(-24deg); }
 .autumn-leaf-two { right: 28px; bottom: 20px; font-size: 14px; transform: rotate(19deg); }
 .welcome-copy { position: relative; z-index: 1; max-width: 480px; }
-.eyebrow { margin: 0 0 12px; color: #71856e; font-size: 9px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
 h1, h2, h3, p { margin-top: 0; }
 .welcome-card h1 { max-width: 440px; margin-bottom: 9px; color: #26382b; font: 700 clamp(23px, 3vw, 32px)/1.2 'Segoe UI', Arial, sans-serif; letter-spacing: -1.15px; }
 .welcome-copy > p:last-of-type { max-width: 390px; margin-bottom: 19px; color: #6f7e6d; font-size: 12px; line-height: 1.65; }
@@ -370,9 +369,51 @@ h1, h2, h3, p { margin-top: 0; }
   .book-illustration { width: 115px; margin-right: -6px; transform: scale(.78); }
   .book-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .book-header { flex-direction: column; }
+  .breadcrumb { font-size: 16px; }
+  .breadcrumb-home { padding: 7px 0; }
+  .breadcrumb strong { font-size: 16px; }
+  .button { min-height: 42px; padding-right: 12px; padding-left: 12px; font-size: 12px; }
+  .button-quiet { min-height: 38px; }
+  .notice { font-size: 12px; }
+  .eyebrow, .quiz-kicker { font-size: 9px; letter-spacing: .8px; }
+  .welcome-card h1 { font-size: 25px; }
+  .welcome-copy > p:last-of-type { font-size: 12px; line-height: 1.5; }
+  .section-heading h2 { font-size: 18px; }
+  .section-heading p { font-size: 12px; line-height: 1.45; }
+  .book-card h3 { font-size: 15px; }
+  .book-card p { font-size: 12px; line-height: 1.4; }
+  .book-header h1, .page-detail-title h1 { font-size: 23px; }
+  .book-header p, .page-detail-title p { font-size: 12px; line-height: 1.45; }
+  .book-header-actions .button { font-size: 12px; }
+  .stat-label { font-size: 12px; line-height: 1.4; }
+  .stat-value { font-size: 20px; }
+  .stat-suffix { font-size: 12px; }
+  .subsection-heading h2 { font-size: 16px; }
+  .page-info h3 { font-size: 12px; }
+  .page-info p { font-size: 12px; }
+  .page-words { font-size: 12px; }
+  .small-icon-button { width: 32px; height: 32px; font-size: 14px; }
+  .page-detail-head .current-page { font-size: 12px; }
+  .vocab-word strong { font-size: 17px; }
+  .vocab-word span { font-size: 12px; line-height: 1.45; }
+  .vocab-page-tag { font-size: 11px; }
+  .quiz-progress-text, .quiz-exit { font-size: 12px; }
+  .quiz-word { font-size: 32px; }
+  .quiz-hint { font-size: 12px; }
+  .answer-option { min-height: 50px; font-size: 12px; }
+  .answer-letter { width: 25px; height: 25px; font-size: 12px; }
+  .answer-feedback { font-size: 12px; line-height: 1.45; }
+  .result-card h1 { font-size: 22px; }
+  .result-card > p { font-size: 12px; line-height: 1.45; }
+  .review-row, .review-row strong { font-size: 11px; line-height: 1.4; }
+  .dialog h2 { font-size: 18px; }
+  .dialog-subtitle, .confirm-copy { font-size: 12px; line-height: 1.5; }
+  .form-field label { font-size: 12px; }
+  .form-field input, .select-input { height: 42px; font-size: 12px; }
+  .emoji-option { width: 34px; height: 34px; font-size: 17px; }
+  .inline-message { font-size: 12px; line-height: 1.5; }
 }
 @media (max-width: 480px) {
-  .breadcrumb { font-size: 10px; }
   .topbar { padding: 0 14px; }
   .topbar-actions { gap: 5px; }
   .theme-toggle { width: 34px; min-height: 32px; padding: 0; }
@@ -382,21 +423,27 @@ h1, h2, h3, p { margin-top: 0; }
   .content { padding-right: 14px; padding-left: 14px; }
   .welcome-card { min-height: 193px; padding: 22px 17px; }
   .welcome-copy { max-width: 72%; }
-  .welcome-card h1 { font-size: 21px; }
-  .welcome-copy > p:last-of-type { font-size: 10px; }
+  .welcome-card h1 { font-size: 23px; }
   .book-illustration { width: 75px; margin-right: -15px; transform: scale(.63); }
   .book-grid { gap: 8px; }
   .book-card { min-height: 136px; padding: 12px; }
-  .book-card h3 { margin-top: 11px; font-size: 11px; }
-  .book-header h1 { font-size: 20px; }
+  .book-card h3 { margin-top: 11px; font-size: 16px; }
+  .book-header h1 { font-size: 23px; }
   .book-header-actions { flex-wrap: wrap; }
-  .stats-row { gap: 6px; }
+  .stats-row { gap: 6px;   }
+  @media (max-width: 380px) {
+    .top-export-label { display: none; }
+    .topbar-actions .button { width: 34px; min-height: 32px; padding: 0; }
+  }
   .stat-card { padding: 11px 9px; }
-  .stat-label { min-height: 25px; font-size: 9px; line-height: 1.35; }
-  .stat-value { font-size: 17px; }
+  .stat-label { min-height: 44px; font-size: 16px; line-height: 1.35; }
+  .stat-value { font-size: 19px; }
   .page-row { gap: 8px; padding: 10px; }
   .page-words { display: none; }
+  .page-actions { gap: 2px; }
+  .page-actions .button { min-height: 40px; padding-right: 9px; padding-left: 9px; font-size: 16px; }
+  .vocab-card { gap: 8px; padding: 12px; }
+  .vocab-page-tag { display: none; }
   .answer-list { grid-template-columns: 1fr; }
-  .answer-option { min-height: 45px; }
   .quiz-card { padding: 24px 17px; }
 }
