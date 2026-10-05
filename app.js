@@ -1,3 +1,16 @@
+import {
+  auth,
+  createUserWithEmailAndPassword,
+  isConfigured,
+  loadCloudLibrary,
+  onAuthStateChanged,
+  saveCloudLibrary,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  signOut,
+  watchCloudLibrary
+} from "./firebase.js";
+
 (function () {
   "use strict";
 
@@ -9,12 +22,22 @@
   const bookList = document.getElementById("book-list");
   const dialogRoot = document.getElementById("dialog-root");
   const noticeRegion = document.getElementById("notice-region");
+  const authScreen = document.getElementById("auth-screen");
+  const appShell = document.getElementById("app-shell");
 
   let library = loadLibrary();
   let activeBookId = null;
   let activePageId = null;
   let quiz = null;
   let noticeTimer = null;
+  let currentUser = null;
+  let cloudBooks = [];
+  let cloudWriteQueue = Promise.resolve();
+  let cloudWritesPending = 0;
+  let latestCloudSnapshot = null;
+  let stopWatchingCloud = null;
+  let authMode = "sign-in";
+  let authGeneration = 0;
 
   function applyTheme(theme) {
     const isDark = theme === "dark";
@@ -78,11 +101,143 @@
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(library));
       render();
-      return true;
     } catch (error) {
       console.error("Не удалось сохранить библиотеку.", error);
       showNotice("Не удалось сохранить данные. Возможно, в браузере закончилось место.", true);
       return false;
+    }
+    if (currentUser) {
+      const user = currentUser;
+      const snapshot = JSON.parse(JSON.stringify(library.books));
+      cloudWritesPending += 1;
+      setSyncStatus("Синхронизация…");
+      cloudWriteQueue = cloudWriteQueue.then(async () => {
+        await saveCloudLibrary(user.uid, snapshot, cloudBooks);
+        cloudBooks = snapshot;
+        if (cloudWritesPending === 1 && currentUser && currentUser.uid === user.uid) {
+          setSyncStatus("Синхронизировано");
+        }
+      }).catch((error) => {
+        console.error("Не удалось синхронизировать библиотеку с Firebase.", error);
+        setSyncStatus("Не синхронизировано", true);
+        showNotice("Не удалось синхронизировать изменения с облаком. Проверь подключение и повтори действие.", true);
+      }).finally(() => {
+        cloudWritesPending -= 1;
+        if (!cloudWritesPending && latestCloudSnapshot && currentUser && user.uid === currentUser.uid) {
+          const pendingSnapshot = latestCloudSnapshot;
+          latestCloudSnapshot = null;
+          applyCloudLibrary(pendingSnapshot, false);
+        }
+      });
+    }
+    return true;
+  }
+
+  function showAuthMessage(message = "", isError = false) {
+    const status = document.getElementById("auth-error");
+    status.textContent = message;
+    status.hidden = !message;
+    status.classList.toggle("auth-info", !isError);
+  }
+
+  function showAuthentication(message = "", isError = false) {
+    authScreen.hidden = false;
+    appShell.hidden = true;
+    showAuthMessage(message, isError);
+  }
+
+  function showAuthenticatedApp(user) {
+    currentUser = user;
+    authScreen.hidden = true;
+    appShell.hidden = false;
+    document.getElementById("account-email").textContent = user.email || "";
+  }
+
+  function setSyncStatus(message, isError = false) {
+    const status = document.getElementById("sync-status");
+    status.textContent = message;
+    status.parentElement.classList.toggle("sync-error", isError);
+    status.parentElement.title = message;
+    status.parentElement.setAttribute("aria-label", message);
+  }
+
+  function applyCloudLibrary(cloudLibrary, showUpdateNotice) {
+    if (!isValidLibrary(cloudLibrary)) {
+      throw new Error("Облачные данные повреждены или имеют неподдерживаемый формат.");
+    }
+    library = cloudLibrary;
+    cloudBooks = JSON.parse(JSON.stringify(cloudLibrary.books));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(library));
+    activeBookId = null;
+    activePageId = null;
+    quiz = null;
+    render();
+    setSyncStatus("Синхронизировано");
+    if (showUpdateNotice) showNotice("Библиотека обновлена с другого устройства.");
+  }
+
+  function describeFirebaseError(error) {
+    const messages = {
+      "auth/email-already-in-use": "Этот адрес электронной почты уже зарегистрирован.",
+      "auth/invalid-credential": "Неверная почта или пароль.",
+      "auth/invalid-email": "Проверь формат электронной почты.",
+      "auth/network-request-failed": "Нет соединения с Firebase. Проверь интернет и повтори попытку.",
+      "auth/operation-not-allowed": "В Firebase не включён вход по почте и паролю.",
+      "auth/too-many-requests": "Слишком много попыток. Попробуй позже.",
+      "auth/unauthorized-domain": "Этот домен не разрешён для Firebase Authentication.",
+      "auth/weak-password": "Пароль должен содержать не менее 6 символов.",
+      "auth/invalid-api-key": "Не удалось подключиться к Firebase. Проверь настройки приложения.",
+      "permission-denied": "Firebase отклонил доступ. Проверь правила Firestore.",
+      "resource-exhausted": "Превышен бесплатный лимит Firebase или размер данных.",
+      "unavailable": "Firebase временно недоступен. Проверь подключение и повтори попытку."
+    };
+    return messages[error.code] || error.message || "Произошла ошибка Firebase.";
+  }
+
+  async function handleAuthenticationState(user) {
+    const generation = ++authGeneration;
+    if (stopWatchingCloud) stopWatchingCloud();
+    stopWatchingCloud = null;
+    currentUser = null;
+    latestCloudSnapshot = null;
+    showAuthentication(user ? "Загружаю облачную библиотеку…" : "Проверяю сессию…");
+    try {
+      await cloudWriteQueue;
+      if (generation !== authGeneration) return;
+      if (!user) {
+        cloudBooks = [];
+        document.getElementById("auth-password").value = "";
+        document.getElementById("auth-signout").hidden = true;
+        showAuthentication();
+        return;
+      }
+      cloudBooks = [];
+      const cloudLibrary = await loadCloudLibrary(user.uid);
+      if (generation !== authGeneration) return;
+      applyCloudLibrary(cloudLibrary, false);
+      showAuthenticatedApp(user);
+      document.getElementById("auth-password").value = "";
+      stopWatchingCloud = watchCloudLibrary(user.uid, (updatedLibrary) => {
+        if (generation !== authGeneration || !isValidLibrary(updatedLibrary)) return;
+        if (cloudWritesPending) {
+          latestCloudSnapshot = updatedLibrary;
+          return;
+        }
+        if (JSON.stringify(updatedLibrary.books) !== JSON.stringify(library.books)) {
+          applyCloudLibrary(updatedLibrary, true);
+        } else {
+          cloudBooks = JSON.parse(JSON.stringify(updatedLibrary.books));
+        }
+      }, (error) => {
+        console.error("Не удалось отслеживать обновления библиотеки Firebase.", error);
+        setSyncStatus("Нет соединения", true);
+        showNotice("Потеряна синхронизация с облаком. Проверь интернет.", true);
+      });
+    } catch (error) {
+      if (generation !== authGeneration) return;
+      console.error("Не удалось загрузить облачную библиотеку.", error);
+      showAuthentication(`Не удалось загрузить библиотеку: ${describeFirebaseError(error)}`, true);
+      document.getElementById("auth-signout").hidden = false;
     }
   }
 
@@ -570,6 +725,102 @@
     event.target.value = "";
   });
 
+  const authForm = document.getElementById("auth-form");
+  const authSubmit = document.getElementById("auth-submit");
+  const authPassword = document.getElementById("auth-password");
+  const authEmail = document.getElementById("auth-email");
+  const authModeToggle = document.getElementById("auth-mode-toggle");
+  const authReset = document.getElementById("auth-reset");
+  const authError = document.getElementById("auth-error");
+  const authSetupHint = document.getElementById("firebase-setup-hint");
+
+  function updateAuthMode() {
+    const registering = authMode === "register";
+    document.getElementById("auth-title").textContent = registering ? "Создать аккаунт" : "Войти в Wordwise";
+    document.getElementById("auth-description").textContent = registering
+      ? "Создай аккаунт, чтобы безопасно хранить библиотеку и открывать её на разных устройствах."
+      : "Войди, чтобы открыть свою библиотеку на любом устройстве.";
+    authPassword.autocomplete = registering ? "new-password" : "current-password";
+    authSubmit.textContent = registering ? "Создать аккаунт" : "Войти";
+    authModeToggle.textContent = registering ? "Уже есть аккаунт? Войти" : "Нет аккаунта? Создать";
+    authReset.hidden = registering;
+    showAuthMessage();
+  }
+
+  authModeToggle.addEventListener("click", () => {
+    authMode = authMode === "sign-in" ? "register" : "sign-in";
+    updateAuthMode();
+  });
+
+  authForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!isConfigured) return;
+    authSubmit.disabled = true;
+    authError.hidden = true;
+    try {
+      const email = authEmail.value.trim();
+      if (authMode === "register") {
+        await createUserWithEmailAndPassword(auth, email, authPassword.value);
+      } else {
+        await signInWithEmailAndPassword(auth, email, authPassword.value);
+      }
+    } catch (error) {
+      console.error("Ошибка аутентификации Firebase.", error);
+      showAuthMessage(describeFirebaseError(error), true);
+    } finally {
+      authSubmit.disabled = !isConfigured;
+    }
+  });
+
+  authReset.addEventListener("click", async () => {
+    if (!isConfigured) return;
+    if (!authEmail.value.trim()) {
+      showAuthMessage("Сначала введи адрес электронной почты.", true);
+      authEmail.focus();
+      return;
+    }
+    authReset.disabled = true;
+    try {
+      await sendPasswordResetEmail(auth, authEmail.value.trim());
+      showAuthMessage("Письмо для сброса пароля отправлено, если для этой почты существует аккаунт.");
+    } catch (error) {
+      console.error("Не удалось отправить письмо для сброса пароля.", error);
+      showAuthMessage(describeFirebaseError(error), true);
+    } finally {
+      authReset.disabled = !isConfigured;
+    }
+  });
+
+  document.getElementById("local-backup-button").addEventListener("click", exportLibrary);
+  document.getElementById("sign-out-button").addEventListener("click", async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Не удалось выйти из Firebase.", error);
+      showNotice(`Не удалось выйти из аккаунта: ${describeFirebaseError(error)}`, true);
+    }
+  });
+  document.getElementById("auth-signout").addEventListener("click", async () => {
+    try {
+      await signOut(auth);
+      document.getElementById("auth-signout").hidden = true;
+    } catch (error) {
+      console.error("Не удалось выйти из Firebase.", error);
+      showAuthMessage(describeFirebaseError(error), true);
+    }
+  });
+
+  if (isConfigured) {
+    showAuthentication("Проверяю сессию…");
+    onAuthStateChanged(auth, handleAuthenticationState);
+  } else {
+    showAuthentication();
+    authSubmit.disabled = true;
+    authModeToggle.disabled = true;
+    authReset.disabled = true;
+    authSetupHint.textContent = "Для входа сначала добавь параметры веб-приложения Firebase в firebase-config.js и опубликуй изменения. Инструкция есть в README.";
+    authSetupHint.hidden = false;
+  }
+
   loadTheme();
-  render();
 }());

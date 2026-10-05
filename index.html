@@ -8,7 +8,33 @@
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <div class="app-shell">
+    <section id="auth-screen" class="auth-screen" hidden>
+      <div class="auth-card">
+        <a class="brand auth-brand" href="#library" aria-label="Wordwise">
+          <span class="brand-mark" aria-hidden="true">w.</span>
+          <span>wordwise<span class="brand-period">.</span></span>
+        </a>
+        <p class="eyebrow">ТВОЯ БИБЛИОТЕКА В ОБЛАКЕ</p>
+        <h1 id="auth-title">Войти в Wordwise</h1>
+        <p id="auth-description" class="auth-description">Войди, чтобы открыть свою библиотеку на любом устройстве.</p>
+        <form id="auth-form" class="auth-form">
+          <label class="form-field"><span>Электронная почта</span><input id="auth-email" name="email" type="email" autocomplete="email" required></label>
+          <label class="form-field"><span>Пароль</span><input id="auth-password" name="password" type="password" autocomplete="current-password" minlength="6" required></label>
+          <p id="auth-error" class="auth-error" role="alert" hidden></p>
+          <button id="auth-submit" class="button button-primary auth-submit" type="submit">Войти</button>
+        </form>
+        <button id="auth-signout" class="auth-text-button" type="button" hidden>Выйти из аккаунта</button>
+        <button id="auth-mode-toggle" class="auth-text-button" type="button">Нет аккаунта? Создать</button>
+        <button id="auth-reset" class="auth-text-button" type="button">Забыли пароль?</button>
+        <div class="auth-local-backup">
+          <strong>Важно перед первым входом</strong>
+          <p>Облачная библиотека заменит данные Wordwise, сохранённые в этом браузере. Скачай локальную копию, если хочешь их сохранить.</p>
+          <button id="local-backup-button" class="button button-quiet" type="button">Скачать локальный бэкап</button>
+        </div>
+        <p id="firebase-setup-hint" class="auth-setup-hint" hidden></p>
+      </div>
+    </section>
+    <div class="app-shell" id="app-shell" hidden>
       <aside class="sidebar" aria-label="Навигация">
         <a class="brand" href="#library" data-action="navigate-library" aria-label="Wordwise — вернуться в библиотеку" title="Вернуться в библиотеку">
           <span class="brand-mark" aria-hidden="true">w.</span>
@@ -31,7 +57,7 @@
           <button id="export-button" class="side-action" type="button"><span aria-hidden="true">↗</span> Экспортировать данные</button>
           <button id="import-button" class="side-action" type="button"><span aria-hidden="true">↙</span> Импортировать данные</button>
           <input id="import-file" type="file" accept="application/json,.json" hidden>
-          <div class="sidebar-footnote">Данные хранятся только на этом устройстве</div>
+          <div class="sidebar-footnote">Данные синхронизируются с твоим аккаунтом</div>
         </div>
       </aside>
 
@@ -39,10 +65,12 @@
         <header class="topbar">
           <div class="breadcrumb"><a class="breadcrumb-home" href="#library" data-action="navigate-library">Библиотека</a><span class="breadcrumb-slash">/</span><strong id="breadcrumb-book">Обзор</strong></div>
           <div class="topbar-actions">
-            <span class="local-badge"><span></span> Личное пространство</span>
+            <span class="local-badge"><span></span> <span id="sync-status" aria-live="polite">Облачное хранилище</span></span>
             <button id="theme-toggle" class="button button-quiet theme-toggle" type="button" aria-label="Включить тёмную тему" title="Включить тёмную тему"><span id="theme-icon" aria-hidden="true">☾</span><span id="theme-label">Тёмная тема</span></button>
             <button id="top-import-button" class="button button-quiet mobile-import" type="button" aria-label="Импортировать данные" title="Импортировать данные"><span aria-hidden="true">↙</span><span class="mobile-import-label">Импорт</span></button>
             <button id="top-export-button" class="button button-quiet" type="button" aria-label="Скачать резервную копию"><span aria-hidden="true">↓</span><span class="top-export-label">Бэкап</span></button>
+            <span id="account-email" class="account-email"></span>
+            <button id="sign-out-button" class="button button-quiet sign-out-button" type="button">Выйти</button>
           </div>
         </header>
         <div id="notice-region" class="notice-region" aria-live="polite"></div>
@@ -50,6 +78,6 @@
       </main>
     </div>
     <div id="dialog-root"></div>
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
   </body>
 </html>
