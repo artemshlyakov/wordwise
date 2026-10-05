@@ -273,7 +273,7 @@ import {
   function showNotice(message, isError) {
     window.clearTimeout(noticeTimer);
     noticeRegion.innerHTML = `<div class="notice${isError ? " error" : ""}" role="status">${escapeHtml(message)}</div>`;
-    noticeTimer = window.setTimeout(() => { noticeRegion.innerHTML = ""; }, 4200);
+    noticeTimer = window.setTimeout(() => { noticeRegion.innerHTML = ""; }, 2800);
   }
 
   function render() {

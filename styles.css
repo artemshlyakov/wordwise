@@ -99,10 +99,10 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid 
 .button-danger:hover { background: #fbece9; }
 .button:disabled { opacity: .48; box-shadow: none; cursor: not-allowed; transform: none; }
 .content { width: min(100%, 1090px); margin: 0 auto; padding: 39px 48px 70px; }
-.notice-region { position: fixed; top: 76px; right: 26px; z-index: 20; width: min(360px, calc(100vw - 32px)); }
+.notice-region { position: fixed; right: 26px; bottom: calc(20px + env(safe-area-inset-bottom)); z-index: 20; width: min(360px, calc(100vw - 32px)); }
 .notice { padding: 12px 15px; border: 1px solid #dce9d6; border-radius: 10px; color: #34533c; background: #f5fbf1; box-shadow: var(--shadow); font-size: 12px; animation: notice-in .18s ease-out; }
 .notice.error { color: #904339; border-color: #f0d9d5; background: #fff7f5; }
-@keyframes notice-in { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes notice-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
 .welcome-card { position: relative; display: flex; min-height: 232px; overflow: hidden; align-items: center; justify-content: space-between; padding: 31px 37px; border-radius: 17px; background: #e8efe5; }
 .welcome-card::after { position: absolute; top: -105px; right: 77px; width: 330px; height: 330px; border: 1px solid #315b4414; border-radius: 50%; content: ""; }
