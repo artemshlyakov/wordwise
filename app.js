@@ -299,7 +299,9 @@ import {
 
   function renderSidebar() {
     const selectedBook = findBook(activeBookId);
-    document.getElementById("breadcrumb-book").textContent = selectedBook ? selectedBook.name : "Обзор";
+    const breadcrumbBook = document.getElementById("breadcrumb-book");
+    breadcrumbBook.textContent = selectedBook ? selectedBook.name : "Обзор";
+    breadcrumbBook.title = selectedBook ? selectedBook.name : "Обзор";
     bookList.innerHTML = library.books.length
       ? library.books.map((book) => `<button class="book-nav-item${book.id === activeBookId ? " active" : ""}" type="button" data-action="open-book" data-book-id="${escapeHtml(book.id)}">
           <span class="book-emoji">${escapeHtml(book.emoji)}</span><span class="book-nav-name">${escapeHtml(book.name)}</span><span class="book-nav-count">${allCards(book).length}</span>
@@ -554,60 +556,6 @@ import {
     });
   }
 
-  function exportLibrary() {
-    const payload = JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), books: library.books }, null, 2);
-    const blob = new Blob([payload], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `wordwise-backup-${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-    showNotice("Резервная копия скачана.");
-  }
-
-  function importLibrary(file) {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onerror = () => showNotice("Не удалось прочитать файл резервной копии.", true);
-    reader.onload = () => {
-      try {
-        const parsed = JSON.parse(String(reader.result));
-        const imported = parsed && parsed.version === 1 && Array.isArray(parsed.books)
-          ? { version: 1, books: parsed.books }
-          : parsed;
-        if (!isValidLibrary(imported)) throw new Error("Структура файла не соответствует формату Wordwise.");
-        const duplicateIds = new Set();
-        imported.books.forEach((book) => {
-          if (duplicateIds.has(book.id)) throw new Error("В резервной копии есть повторяющиеся идентификаторы книг.");
-          duplicateIds.add(book.id);
-          const pageIds = new Set();
-          book.pages.forEach((page) => {
-            if (pageIds.has(page.id)) throw new Error("В резервной копии есть повторяющиеся идентификаторы глав.");
-            pageIds.add(page.id);
-            const cardIds = new Set();
-            page.cards.forEach((card) => {
-              if (cardIds.has(card.id)) throw new Error("В резервной копии есть повторяющиеся идентификаторы карточек.");
-              cardIds.add(card.id);
-            });
-          });
-        });
-        confirmAction("Загрузить резервную копию?", `Импорт заменит текущую библиотеку (${library.books.length} ${wordEnding(library.books.length, "книга", "книги", "книг")}). Это действие нельзя отменить.`, "Заменить данные", true, () => {
-          library = imported;
-          activeBookId = null;
-          activePageId = null;
-          if (saveLibrary()) showNotice("Резервная копия загружена.");
-        });
-      } catch (error) {
-        console.error("Не удалось импортировать резервную копию.", error);
-        showNotice(error instanceof Error ? error.message : "Файл резервной копии повреждён или имеет неверный формат.", true);
-      }
-    };
-    reader.readAsText(file);
-  }
-
   document.addEventListener("click", (event) => {
     const target = event.target instanceof Element ? event.target.closest("[data-action]") : null;
     if (!target) return;
@@ -704,8 +652,6 @@ import {
 
   document.getElementById("add-book-button").addEventListener("click", () => openBookDialog(null));
   document.getElementById("sidebar-add-book").addEventListener("click", () => openBookDialog(null));
-  document.getElementById("export-button").addEventListener("click", exportLibrary);
-  document.getElementById("top-export-button").addEventListener("click", exportLibrary);
   document.getElementById("theme-toggle").addEventListener("click", () => {
     const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
     applyTheme(nextTheme);
@@ -717,12 +663,6 @@ import {
       return;
     }
     showNotice(nextTheme === "dark" ? "Включена тёмная тема." : "Включена светлая тема.");
-  });
-  document.getElementById("import-button").addEventListener("click", () => document.getElementById("import-file").click());
-  document.getElementById("top-import-button").addEventListener("click", () => document.getElementById("import-file").click());
-  document.getElementById("import-file").addEventListener("change", (event) => {
-    importLibrary(event.target.files[0]);
-    event.target.value = "";
   });
 
   const authForm = document.getElementById("auth-form");
@@ -791,7 +731,6 @@ import {
     }
   });
 
-  document.getElementById("local-backup-button").addEventListener("click", exportLibrary);
   document.getElementById("sign-out-button").addEventListener("click", async () => {
     try {
       await signOut(auth);

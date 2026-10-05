@@ -26,11 +26,6 @@
         <button id="auth-signout" class="auth-text-button" type="button" hidden>Выйти из аккаунта</button>
         <button id="auth-mode-toggle" class="auth-text-button" type="button">Нет аккаунта? Создать</button>
         <button id="auth-reset" class="auth-text-button" type="button">Забыли пароль?</button>
-        <div class="auth-local-backup">
-          <strong>Важно перед первым входом</strong>
-          <p>Облачная библиотека заменит данные Wordwise, сохранённые в этом браузере. Скачай локальную копию, если хочешь их сохранить.</p>
-          <button id="local-backup-button" class="button button-quiet" type="button">Скачать локальный бэкап</button>
-        </div>
         <p id="firebase-setup-hint" class="auth-setup-hint" hidden></p>
       </div>
     </section>
@@ -54,9 +49,6 @@
             <span class="storage-icon" aria-hidden="true">✳</span>
             <div><strong>Твоя библиотека</strong><span id="storage-count">Пока без слов</span></div>
           </div>
-          <button id="export-button" class="side-action" type="button"><span aria-hidden="true">↗</span> Экспортировать данные</button>
-          <button id="import-button" class="side-action" type="button"><span aria-hidden="true">↙</span> Импортировать данные</button>
-          <input id="import-file" type="file" accept="application/json,.json" hidden>
           <div class="sidebar-footnote">Данные синхронизируются с твоим аккаунтом</div>
         </div>
       </aside>
@@ -67,8 +59,6 @@
           <div class="topbar-actions">
             <span class="local-badge"><span></span> <span id="sync-status" aria-live="polite">Облачное хранилище</span></span>
             <button id="theme-toggle" class="button button-quiet theme-toggle" type="button" aria-label="Включить тёмную тему" title="Включить тёмную тему"><span id="theme-icon" aria-hidden="true">☾</span><span id="theme-label">Тёмная тема</span></button>
-            <button id="top-import-button" class="button button-quiet mobile-import" type="button" aria-label="Импортировать данные" title="Импортировать данные"><span aria-hidden="true">↙</span><span class="mobile-import-label">Импорт</span></button>
-            <button id="top-export-button" class="button button-quiet" type="button" aria-label="Скачать резервную копию"><span aria-hidden="true">↓</span><span class="top-export-label">Бэкап</span></button>
             <span id="account-email" class="account-email"></span>
             <button id="sign-out-button" class="button button-quiet sign-out-button" type="button">Выйти</button>
           </div>
