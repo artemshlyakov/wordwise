@@ -43,8 +43,6 @@ import {
     const isDark = theme === "dark";
     document.documentElement.dataset.theme = isDark ? "dark" : "light";
     document.querySelector('meta[name="theme-color"]').setAttribute("content", isDark ? "#292c29" : "#f7f8f4");
-    document.getElementById("theme-icon").textContent = isDark ? "☀" : "☾";
-    document.getElementById("theme-label").textContent = isDark ? "Светлая тема" : "Тёмная тема";
     const label = isDark ? "Включить светлую тему" : "Включить тёмную тему";
     document.getElementById("theme-toggle").setAttribute("aria-label", label);
     document.getElementById("theme-toggle").setAttribute("title", label);
@@ -330,6 +328,7 @@ import {
         <span class="welcome-spark" aria-hidden="true">✳</span>
         <span class="autumn-leaf autumn-leaf-one" aria-hidden="true">🍂</span>
         <span class="autumn-leaf autumn-leaf-two" aria-hidden="true">🍁</span>
+        <span class="welcome-pumpkin" aria-hidden="true">🎃</span>
         <div class="welcome-copy">
           <p class="eyebrow">Твой словарь. Твой темп.</p>
           <h1>Читай больше.<br>Запоминай надолго.</h1>
